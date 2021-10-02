@@ -1,1 +1,1 @@
-// Hier soll die Schnittstelle von CamContent kommen
+// Hier soll die Schnittstelle von CamContent kommen.
