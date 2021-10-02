@@ -1,0 +1,1 @@
+// Hier soll die Schnittstelle von CamContent kommen
