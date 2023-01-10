@@ -1,4 +1,4 @@
-// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
+// Edit extension, https://github.com/annaesvensson/yellow-edit
 
 var yellow = {
     onLoad: function(e) { yellow.edit.load(e); },
@@ -130,7 +130,7 @@ yellow.edit = {
     
     // Create pane
     createPane: function(paneId, paneAction, paneStatus) {
-        if (yellow.system.debug) console.log("yellow.edit.createPane id:"+paneId);
+        if (yellow.system.coreDebugMode) console.log("yellow.edit.createPane id:"+paneId);
         var elementPane = document.createElement("div");
         elementPane.className = "yellow-pane";
         elementPane.setAttribute("id", paneId);
@@ -514,7 +514,7 @@ yellow.edit = {
             if (!document.getElementById(paneId)) this.createPane(paneId, paneAction, paneStatus);
             var element = document.getElementById(paneId);
             if (!yellow.toolbox.isVisible(element)) {
-                if (yellow.system.debug) console.log("yellow.edit.showPane id:"+paneId);
+                if (yellow.system.coreDebugMode) console.log("yellow.edit.showPane id:"+paneId);
                 yellow.toolbox.setVisible(element, true);
                 if (paneModal) {
                     yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
@@ -536,7 +536,7 @@ yellow.edit = {
     hidePane: function(paneId, fadeout) {
         var element = document.getElementById(paneId);
         if (yellow.toolbox.isVisible(element)) {
-            if (yellow.system.debug) console.log("yellow.edit.hidePane id:"+paneId);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.hidePane id:"+paneId);
             yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
             yellow.toolbox.removeValue("meta[name=viewport]", "content", ", maximum-scale=1, user-scalable=0");
             yellow.toolbox.setVisible(element, false, fadeout);
@@ -554,7 +554,7 @@ yellow.edit = {
         status = status ? status : "none";
         arguments = arguments ? arguments : "none";
         if (action!="none") {
-            if (yellow.system.debug) console.log("yellow.edit.processAction action:"+action+" status:"+status);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.processAction action:"+action+" status:"+status);
             var paneId = (status!="next" && status!="done") ? "yellow-pane-"+action : "yellow-pane-information";
             switch(action) {
                 case "login":       this.showPane(paneId, action, status); break;
@@ -587,7 +587,7 @@ yellow.edit = {
     
     // Process toolbar
     processToolbar: function(status, arguments) {
-        if (yellow.system.debug) console.log("yellow.edit.processToolbar status:"+status);
+        if (yellow.system.coreDebugMode) console.log("yellow.edit.processToolbar status:"+status);
         var elementText = document.getElementById(this.paneId+"-text");
         var elementPreview = document.getElementById(this.paneId+"-preview");
         if (!yellow.toolbox.isVisible(elementPreview) && !elementText.readOnly) {
@@ -652,7 +652,7 @@ yellow.edit = {
             for (var i=0; i<tokens.length; i++) {
                 var pair = tokens[i].split(" ");
                 if (shortcut==pair[0] || shortcut.replace("meta+", "ctrl+")==pair[0]) {
-                    if (yellow.system.debug) console.log("yellow.edit.processShortcut shortcut:"+shortcut);
+                    if (yellow.system.coreDebugMode) console.log("yellow.edit.processShortcut shortcut:"+shortcut);
                     e.stopPropagation();
                     e.preventDefault();
                     this.processToolbar(pair[1]);
@@ -693,12 +693,18 @@ yellow.edit = {
     // Process close
     processClose: function() {
         this.hidePane(this.paneId);
-        if (yellow.page.action=="login") window.open(yellow.page.pageReadUrl, "_self");
+        if (yellow.page.action=="login") {
+            var url = yellow.system.coreServerScheme+"://"+
+                yellow.system.coreServerAddress+
+                yellow.system.coreServerBase+
+                yellow.page.location;
+            window.open(url, "_self");
+        }
     },
     
     // Create popup
     createPopup: function(popupId) {
-        if (yellow.system.debug) console.log("yellow.edit.createPopup id:"+popupId);
+        if (yellow.system.coreDebugMode) console.log("yellow.edit.createPopup id:"+popupId);
         var elementPopup = document.createElement("div");
         elementPopup.className = "yellow-popup";
         elementPopup.setAttribute("id", popupId);
@@ -734,25 +740,25 @@ yellow.edit = {
                 "<li><a href=\"#\" id=\"yellow-popup-list-tl\" data-action=\"toolbar\" data-status=\"tl\">"+this.getText("ToolbarTl")+"</a></li>"+
                 "</ul>";
                 break;
-            case "yellow-popup-emojiawesome":
+            case "yellow-popup-emoji":
                 var rawDataEmojis = "";
-                if (yellow.system.emojiawesomeToolbarButtons && yellow.system.emojiawesomeToolbarButtons!="none") {
-                    var tokens = yellow.system.emojiawesomeToolbarButtons.split(" ");
+                if (yellow.system.emojiToolbarButtons && yellow.system.emojiToolbarButtons!="none") {
+                    var tokens = yellow.system.emojiToolbarButtons.split(" ");
                     for (var i=0; i<tokens.length; i++) {
                         var token = tokens[i].replace(/[\:]/g,"");
                         var className = token.replace("+1", "plus1").replace("-1", "minus1").replace(/_/g, "-");
-                        rawDataEmojis += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"ea ea-"+yellow.toolbox.encodeHtml(className)+"\"></i></a></li>";
+                        rawDataEmojis += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"emoji emoji-"+yellow.toolbox.encodeHtml(className)+"\"></i></a></li>";
                     }
                 }
                 elementDiv.innerHTML = "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+rawDataEmojis+"</ul>";
                 break;
-            case "yellow-popup-fontawesome":
+            case "yellow-popup-icon":
                 var rawDataIcons = "";
-                if (yellow.system.fontawesomeToolbarButtons && yellow.system.fontawesomeToolbarButtons!="none") {
-                    var tokens = yellow.system.fontawesomeToolbarButtons.split(" ");
+                if (yellow.system.iconToolbarButtons && yellow.system.iconToolbarButtons!="none") {
+                    var tokens = yellow.system.iconToolbarButtons.split(" ");
                     for (var i=0; i<tokens.length; i++) {
                         var token = tokens[i].replace(/[\:]/g,"");
-                        rawDataIcons += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"fa "+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
+                        rawDataIcons += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"icon "+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
                     }
                 }
                 elementDiv.innerHTML = "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+rawDataIcons+"</ul>";
@@ -769,7 +775,7 @@ yellow.edit = {
             this.hidePopup(this.popupId);
             if (!document.getElementById(popupId)) this.createPopup(popupId);
             var element = document.getElementById(popupId);
-            if (yellow.system.debug) console.log("yellow.edit.showPopup id:"+popupId);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.showPopup id:"+popupId);
             yellow.toolbox.setVisible(element, true);
             this.popupId = popupId;
             this.updateToolbar(status, "yellow-toolbar-selected");
@@ -787,7 +793,7 @@ yellow.edit = {
     hidePopup: function(popupId, fadeout) {
         var element = document.getElementById(popupId);
         if (yellow.toolbox.isVisible(element)) {
-            if (yellow.system.debug) console.log("yellow.edit.hidePopup id:"+popupId);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.hidePopup id:"+popupId);
             yellow.toolbox.setVisible(element, false, fadeout);
             this.popupId = 0;
             this.updateToolbar(0, "yellow-toolbar-selected");
@@ -1018,7 +1024,7 @@ yellow.edit = {
 
     // Check if element is expandable
     isExpandable: function(name) {
-        return (name=="format" || name=="heading" || name=="list" || name=="emojiawesome" || name=="fontawesome");
+        return (name=="format" || name=="heading" || name=="list" || name=="emoji" || name=="icon");
     },
     
     // Check if extension exists
@@ -1090,7 +1096,7 @@ yellow.editor = {
             element.value = textSelectionBefore + textSelectionNew + textSelectionAfter;
             element.setSelectionRange(selectionStartNew, selectionEndNew);
         }
-        if (yellow.system.debug) console.log("yellow.editor.setMarkdown type:"+information.type);
+        if (yellow.system.coreDebugMode) console.log("yellow.editor.setMarkdown type:"+information.type);
     },
     
     // Return Markdown formatting information
@@ -1224,7 +1230,7 @@ yellow.editor = {
             element.value = textSelectionBefore + textSelectionNew + textSelectionAfter;
             element.setSelectionRange(selectionStartNew, selectionEndNew);
             element.scrollTop = 0;
-            if (yellow.system.debug) console.log("yellow.editor.setMetaData key:"+key);
+            if (yellow.system.coreDebugMode) console.log("yellow.editor.setMetaData key:"+key);
         }
     },
     
